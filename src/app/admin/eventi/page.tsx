@@ -16,6 +16,23 @@ import DeleteEventButton from '../../dashboard/DeleteEventButton'
 
 export const dynamic = 'force-dynamic'
 
+interface Event {
+  id: string
+  titolo: string
+  descrizione: string
+  categoria: string
+  luogo: string
+  data_inizio: string
+  data_fine: string | null
+  ora_inizio: string
+  ora_fine: string | null
+  is_draft: boolean
+  views_count: number
+  created_at: string
+  creato_da: string
+  users?: { nome: string; cognome: string }
+}
+
 const categoryLabels: Record<string, string> = {
   sport: 'Sport',
   cultura: 'Cultura',
@@ -41,7 +58,7 @@ export default async function AdminEventiPage() {
     .from('users')
     .select('role')
     .eq('id', user.id)
-    .single()
+    .single() as { data: { role: string } | null; error: unknown }
 
   if (!profile || profile.role !== 'admin') {
     redirect('/')
@@ -54,7 +71,7 @@ export default async function AdminEventiPage() {
       *,
       users!events_creato_da_fkey(nome, cognome)
     `)
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: false }) as { data: Event[] | null; error: unknown }
 
   // Get stats for each event
   const eventsWithStats = []
@@ -63,7 +80,7 @@ export default async function AdminEventiPage() {
       const { data: reviews } = await supabase
         .from('reviews')
         .select('rating')
-        .eq('event_id', event.id)
+        .eq('event_id', event.id) as { data: { rating: number }[] | null; error: unknown }
 
       const { count: savesCount } = await supabase
         .from('saved_events')

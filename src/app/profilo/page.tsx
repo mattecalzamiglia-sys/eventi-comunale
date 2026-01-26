@@ -18,7 +18,7 @@ export default async function ProfiloPage() {
     .from('users')
     .select('*')
     .eq('id', authUser.id)
-    .single()
+    .single() as { data: { id: string; nome: string; cognome: string; email: string; role: string; is_active: boolean; created_at: string; notify_new_events: boolean; notify_reminders: boolean; notify_updates: boolean } | null; error: unknown }
 
   if (!profile) {
     redirect('/login')

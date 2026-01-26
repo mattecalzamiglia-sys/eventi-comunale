@@ -35,7 +35,7 @@ export default async function StatisticheEventoPage({ params }: PageProps) {
     .from('users')
     .select('role')
     .eq('id', user.id)
-    .single()
+    .single() as { data: { role: string } | null; error: unknown }
 
   if (!profile || (profile.role !== 'comunale' && profile.role !== 'admin')) {
     redirect('/')

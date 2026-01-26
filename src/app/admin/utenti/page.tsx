@@ -9,10 +9,11 @@ import {
   UserPlus,
   Shield,
   Building,
-  User,
+  User as UserIcon,
 } from 'lucide-react'
 import CreateUserForm from './CreateUserForm'
 import UserActions from './UserActions'
+import type { User } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +31,7 @@ export default async function AdminUtentiPage() {
     .from('users')
     .select('role')
     .eq('id', user.id)
-    .single()
+    .single() as { data: { role: string } | null; error: unknown }
 
   if (!profile || profile.role !== 'admin') {
     redirect('/')
@@ -40,12 +41,12 @@ export default async function AdminUtentiPage() {
   const { data: users } = await supabase
     .from('users')
     .select('*')
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: false }) as { data: User[] | null; error: unknown }
 
   const roleIcons: Record<string, typeof Shield> = {
     admin: Shield,
     comunale: Building,
-    cittadino: User,
+    cittadino: UserIcon,
   }
 
   const roleColors: Record<string, string> = {
@@ -109,7 +110,7 @@ export default async function AdminUtentiPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {users.map((u) => {
-                    const RoleIcon = roleIcons[u.role] || User
+                    const RoleIcon = roleIcons[u.role] || UserIcon
 
                     return (
                       <tr key={u.id} className="hover:bg-gray-50">

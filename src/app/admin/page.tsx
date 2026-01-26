@@ -28,7 +28,7 @@ export default async function AdminPage() {
     .from('users')
     .select('role, nome')
     .eq('id', user.id)
-    .single()
+    .single() as { data: { role: string; nome: string } | null; error: unknown }
 
   if (!profile || profile.role !== 'admin') {
     redirect('/')
@@ -61,7 +61,7 @@ export default async function AdminPage() {
   // Fetch total views
   const { data: eventsData } = await supabase
     .from('events')
-    .select('views_count')
+    .select('views_count') as { data: { views_count: number }[] | null; error: unknown }
   const totalViews = eventsData?.reduce((acc, e) => acc + e.views_count, 0) || 0
 
   // Fetch total saves

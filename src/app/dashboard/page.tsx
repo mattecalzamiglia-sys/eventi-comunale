@@ -43,7 +43,7 @@ export default async function DashboardPage() {
     .from('users')
     .select('role, nome, cognome')
     .eq('id', user.id)
-    .single()
+    .single() as { data: { role: string; nome: string; cognome: string } | null; error: unknown }
 
   if (!profile || (profile.role !== 'comunale' && profile.role !== 'admin')) {
     redirect('/')

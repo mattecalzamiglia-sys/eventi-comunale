@@ -51,7 +51,7 @@ export default async function AdminStatistichePage() {
     .from('users')
     .select('role')
     .eq('id', user.id)
-    .single()
+    .single() as { data: { role: string } | null; error: unknown }
 
   if (!profile || profile.role !== 'admin') {
     redirect('/')
@@ -89,7 +89,7 @@ export default async function AdminStatistichePage() {
   const { data: allEvents } = await supabase
     .from('events')
     .select('views_count, categoria')
-    .eq('is_draft', false)
+    .eq('is_draft', false) as { data: { views_count: number; categoria: string }[] | null; error: unknown }
 
   const totalViews = allEvents?.reduce((acc, e) => acc + e.views_count, 0) || 0
 
@@ -118,12 +118,12 @@ export default async function AdminStatistichePage() {
     `)
     .eq('is_draft', false)
     .order('views_count', { ascending: false })
-    .limit(5)
+    .limit(5) as { data: { id: string; titolo: string; views_count: number; categoria: string }[] | null; error: unknown }
 
   // Most saved events
   const { data: savedEventsData } = await supabase
     .from('saved_events')
-    .select('event_id')
+    .select('event_id') as { data: { event_id: string }[] | null; error: unknown }
 
   const savesCounts: Record<string, number> = {}
   savedEventsData?.forEach(s => {
@@ -135,12 +135,12 @@ export default async function AdminStatistichePage() {
     .slice(0, 5)
     .map(([id]) => id)
 
-  let topSavedEvents: any[] = []
+  let topSavedEvents: { id: string; titolo: string; categoria: string; saves_count: number }[] = []
   if (topSavedEventIds.length > 0) {
     const { data } = await supabase
       .from('events')
       .select('id, titolo, categoria')
-      .in('id', topSavedEventIds)
+      .in('id', topSavedEventIds) as { data: { id: string; titolo: string; categoria: string }[] | null; error: unknown }
 
     topSavedEvents = data?.map(e => ({
       ...e,

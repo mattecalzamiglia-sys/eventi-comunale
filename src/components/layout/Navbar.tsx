@@ -32,26 +32,30 @@ export default function Navbar() {
 
     async function getUser() {
       setLoading(true)
-      const { data: { user: authUser } } = await supabase.auth.getUser()
 
-      if (authUser) {
-        const { data: profile } = await supabase
+      // Prima controlla la sessione
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (session?.user) {
+        const { data: profile, error } = await supabase
           .from('users')
           .select('*')
-          .eq('id', authUser.id)
+          .eq('id', session.user.id)
           .single()
 
-        if (profile) {
+        if (profile && !error) {
           setUser(profile as UserType)
 
           // Conta notifiche non lette
           const { count } = await supabase
             .from('notifications')
             .select('*', { count: 'exact', head: true })
-            .eq('user_id', authUser.id)
+            .eq('user_id', session.user.id)
             .eq('is_read', false)
 
           setNotificationCount(count || 0)
+        } else {
+          setUser(null)
         }
       } else {
         setUser(null)
@@ -62,9 +66,9 @@ export default function Navbar() {
     getUser()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_OUT' || !session) {
         setUser(null)
-      } else if (session?.user) {
+      } else if (event === 'SIGNED_IN' && session?.user) {
         const { data: profile } = await supabase
           .from('users')
           .select('*')

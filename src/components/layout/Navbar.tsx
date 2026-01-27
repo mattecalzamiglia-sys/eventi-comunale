@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { logout } from '@/lib/actions/auth'
 import { useAuthStore } from '@/stores/auth-store'
 import {
@@ -19,70 +18,12 @@ import {
   Settings,
   Shield,
 } from 'lucide-react'
-import type { User as UserType } from '@/types/database'
 
 export default function Navbar() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [notificationCount, setNotificationCount] = useState(0)
-  const { user, setUser, setLoading } = useAuthStore()
-
-  useEffect(() => {
-    const supabase = createClient()
-
-    async function getUser() {
-      setLoading(true)
-
-      // Prima controlla la sessione
-      const { data: { session } } = await supabase.auth.getSession()
-
-      if (session?.user) {
-        const { data: profile, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-
-        if (profile && !error) {
-          setUser(profile as UserType)
-
-          // Conta notifiche non lette
-          const { count } = await supabase
-            .from('notifications')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', session.user.id)
-            .eq('is_read', false)
-
-          setNotificationCount(count || 0)
-        } else {
-          setUser(null)
-        }
-      } else {
-        setUser(null)
-      }
-      setLoading(false)
-    }
-
-    getUser()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
-        setUser(null)
-      } else if (event === 'SIGNED_IN' && session?.user) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-
-        if (profile) {
-          setUser(profile as UserType)
-        }
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [setUser, setLoading])
+  const { user } = useAuthStore()
+  const notificationCount = 0 // TODO: fetch from server or props
 
   const isActive = (path: string) => pathname === path
 

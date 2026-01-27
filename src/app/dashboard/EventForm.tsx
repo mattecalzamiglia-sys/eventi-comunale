@@ -17,6 +17,7 @@ import {
   Eye,
 } from 'lucide-react'
 import { creaEvento, modificaEvento } from '@/lib/actions/events'
+import ImageUpload from '@/components/ImageUpload'
 import type { Event, EventCategory } from '@/types/database'
 
 interface EventFormProps {
@@ -336,24 +337,17 @@ export default function EventForm({ event }: EventFormProps) {
           />
         </div>
 
-        {/* Immagine URL */}
+        {/* Immagine */}
         <div>
-          <label htmlFor="immagine_url" className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             <ImageIcon className="w-4 h-4 inline mr-1" />
-            URL Immagine (opzionale)
+            Immagine evento (opzionale)
           </label>
-          <input
-            id="immagine_url"
-            name="immagine_url"
-            type="url"
+          <ImageUpload
             value={formData.immagine_url}
-            onChange={handleChange}
-            placeholder="https://esempio.it/immagine.jpg"
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onChange={(url) => setFormData(prev => ({ ...prev, immagine_url: url }))}
+            onClear={() => setFormData(prev => ({ ...prev, immagine_url: '' }))}
           />
-          <p className="mt-1 text-xs text-gray-500">
-            Inserisci l&apos;URL di un&apos;immagine già caricata online
-          </p>
         </div>
 
         {/* Actions */}

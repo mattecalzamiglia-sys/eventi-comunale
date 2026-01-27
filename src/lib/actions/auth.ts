@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
@@ -204,38 +205,47 @@ export async function creaUtenteComunale(formData: FormData): Promise<AuthResult
     return { success: false, error: 'Tutti i campi sono obbligatori' }
   }
 
-  // Crea utente in Supabase Auth (bypass email confirmation per comunale)
-  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-  })
+  try {
+    // Usa il client admin con service role key per creare utenti
+    const adminClient = createAdminClient()
 
-  if (authError) {
-    if (authError.message.includes('already registered')) {
-      return { success: false, error: 'Email già registrata' }
-    }
-    return { success: false, error: 'Errore durante la creazione dell\'utente' }
-  }
-
-  if (authData.user) {
-    // Crea profilo utente comunale
-    const { error: profileError } = await supabase.from('users').insert({
-      id: authData.user.id,
+    // Crea utente in Supabase Auth (bypass email confirmation per comunale)
+    const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email,
-      nome,
-      cognome,
-      role: 'comunale',
+      password,
+      email_confirm: true,
     })
 
-    if (profileError) {
-      console.error('Error creating comunale profile:', profileError)
-      return { success: false, error: 'Errore durante la creazione del profilo' }
+    if (authError) {
+      console.error('Error creating auth user:', authError)
+      if (authError.message.includes('already registered')) {
+        return { success: false, error: 'Email già registrata' }
+      }
+      return { success: false, error: 'Errore durante la creazione dell\'utente' }
     }
-  }
 
-  revalidatePath('/admin/utenti')
-  return { success: true }
+    if (authData.user) {
+      // Crea profilo utente comunale usando il client admin
+      const { error: profileError } = await adminClient.from('users').insert({
+        id: authData.user.id,
+        email,
+        nome,
+        cognome,
+        role: 'comunale',
+      })
+
+      if (profileError) {
+        console.error('Error creating comunale profile:', profileError)
+        return { success: false, error: 'Errore durante la creazione del profilo' }
+      }
+    }
+
+    revalidatePath('/admin/utenti')
+    return { success: true }
+  } catch (error) {
+    console.error('Error in creaUtenteComunale:', error)
+    return { success: false, error: 'Errore di configurazione del server. Contattare l\'amministratore.' }
+  }
 }
 
 // Disattiva/Attiva utente comunale (solo admin)
@@ -291,13 +301,22 @@ export async function eliminaUtenteComunale(userId: string): Promise<AuthResult>
     return { success: false, error: 'Solo gli admin possono eliminare utenti comunali' }
   }
 
-  // Elimina da auth (cascade eliminerà anche il profilo)
-  const { error } = await supabase.auth.admin.deleteUser(userId)
+  try {
+    // Usa il client admin con service role key
+    const adminClient = createAdminClient()
 
-  if (error) {
-    return { success: false, error: 'Errore durante l\'eliminazione' }
+    // Elimina da auth (cascade eliminerà anche il profilo)
+    const { error } = await adminClient.auth.admin.deleteUser(userId)
+
+    if (error) {
+      console.error('Error deleting user:', error)
+      return { success: false, error: 'Errore durante l\'eliminazione' }
+    }
+
+    revalidatePath('/admin/utenti')
+    return { success: true }
+  } catch (error) {
+    console.error('Error in eliminaUtenteComunale:', error)
+    return { success: false, error: 'Errore di configurazione del server' }
   }
-
-  revalidatePath('/admin/utenti')
-  return { success: true }
 }

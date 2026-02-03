@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import BottomNav from "@/components/layout/BottomNav";
+import PWAUpdater from "@/components/PWAUpdater";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { createClient } from "@/lib/supabase/server";
 import type { User } from "@/types/database";
@@ -60,6 +61,7 @@ export default async function RootLayout({
     <html lang="it">
       <body className={`${inter.className} antialiased bg-gray-50`}>
         <AuthProvider initialUser={user}>
+          <PWAUpdater />
           <Navbar />
           <main className="pb-20 md:pb-0">{children}</main>
           <BottomNav />

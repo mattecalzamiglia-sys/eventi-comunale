@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
+import BottomNav from "@/components/layout/BottomNav";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { createClient } from "@/lib/supabase/server";
 import type { User } from "@/types/database";
@@ -13,6 +14,20 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Eventi Comunali",
   description: "Scopri gli eventi organizzati dal comune e dalle associazioni locali",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Eventi Comunali",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#2563eb",
 };
 
 async function getUser(): Promise<User | null> {
@@ -46,7 +61,8 @@ export default async function RootLayout({
       <body className={`${inter.className} antialiased bg-gray-50`}>
         <AuthProvider initialUser={user}>
           <Navbar />
-          <main>{children}</main>
+          <main className="pb-20 md:pb-0">{children}</main>
+          <BottomNav />
         </AuthProvider>
       </body>
     </html>

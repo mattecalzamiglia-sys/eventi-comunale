@@ -80,13 +80,15 @@ export default function EventCard({
           <button
             onClick={(e) => {
               e.preventDefault()
+              e.stopPropagation()
               onToggleSave(event.id)
             }}
-            className={`absolute top-3 right-3 p-2 rounded-full transition-colors ${
+            className={`absolute top-2 right-2 p-3 rounded-full transition-colors active:scale-95 ${
               isSaved
                 ? 'bg-red-500 text-white'
-                : 'bg-white/90 text-gray-600 hover:bg-white'
+                : 'bg-white/90 text-gray-600 hover:bg-white active:bg-gray-100'
             }`}
+            aria-label={isSaved ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'}
           >
             <Heart className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
           </button>
